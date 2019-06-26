@@ -59,8 +59,13 @@ bad.tags <- nDetections[which(nDetections$Boolean==0),]
 good.tags <- nDetections[which(nDetections$Boolean==1),]
 
 ##Remove Tags w/ sub 100 detections from larger data set
-XX
 
+a <- bad.tags$ID
+crab.dat <- subset(crab.dat, ! ID %in% a)
+
+##double check to make sure factor levels and assciated data were removed
+##should match value from ln 59 (number of good tags)
+droplevels(crab.dat$ID)
 
 
 ###DISREGARD BELOW. NOT FINISHED YET.
