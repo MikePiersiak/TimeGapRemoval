@@ -9,15 +9,12 @@
 
 
 crab.dat <- read.csv("CrabData.csv")
-crab.test <- read.csv("CrabData.test.csv")
 str(crab.dat)
 
 crab.dat$Time <- as.POSIXct(crab.dat$Time, format = "%m/%d/%Y %H:%M", tz="UTC")
 crab.dat$release.time <- as.POSIXct(crab.dat$release.time, format = "%m/%d/%Y %H:%M", tz="UTC")
-crab.test$Time <- as.POSIXct(crab.test$Time, format = "%m/%d/%Y %H:%M", tz="UTC")
-
 crab.dat$TRANSMITTER <- as.factor(crab.dat$TRANSMITTER)
-crab.test$TRANSMITTER <- as.factor(crab.test$TRANSMITTER)
+
 
 ##change name of column 'TRANSMITTER' to 'ID' for later imputation in momentuHMM (as well as X/Y cols to 'x' and 'y' and col(Time) to 'time)
 names(crab.dat)[names(crab.dat) == "TRANSMITTER"] <- "ID"
@@ -25,59 +22,13 @@ names(crab.dat)[names(crab.dat) == "X"] <- "x"
 names(crab.dat)[names(crab.dat) == "Y"] <- "y"
 names(crab.dat)[names(crab.dat) == "Time"] <- "time"
 
-names(crab.test)[names(crab.test) == "TRANSMITTER"] <- "ID"
-names(crab.test)[names(crab.test) == "X"] <- "x"
-names(crab.test)[names(crab.test) == "Y"] <- "y"
-names(crab.test)[names(crab.test) == "Time"] <- "time"
-
-test <- subset(crab.dat, ID=="31288")
-str(test)
-
-head(test)
-test$seq <- as.factor(seq(1:nrow(test)))
-
-time.difference <- NULL
-time.diff.sheet <- NULL
-
-##may need to tell R to start at Row 2(i.e. avoid using header and spitting out NAs)
-for (m in levels(test$seq))
-{
-  Row <- subset(test, seq==m)
-    
-  RowAdj <- subset(test, seq == (m+1))
-  
-  ##probably add an ifelse here telling it to stop at max number of rows in the data sheet (or for that particular tag)
-  
-  a <- difftime(RowAdj$time, Row$time, tz = "UTC", units="hours")
-  time.diff.sheet <- as.data.frame(a)
-  time.difference <- rbind(time.difference, time.diff.sheet)
-}
-
-##doesn't work on initial subset of tags. going tag by tag to ID the bad tag(s) and figure out wtf
-##isn't working
-
-require(momentuHMM)
-crwOut1 <- crawlWrap(obsData=crab.test, timeStep="hour",theta=c(6.855, -0.007), fixPar=c(NA,NA))
-
-levels(crab.test$ID)                     
-tag.remove <- subset(crab.test, ! ID %in% c(#"31289",
-                                            #"31290",
-                                            #"31292",
-                                            #"31293",
-                                            #"31295",
-                                            #"31296",
-                                            #"31298",
-                                            #"31299",
-                                            #"31300",
-                                            "31301"))
-
 ###crawlWrap fails if wrapper function creates track with <100 detection locations
 ###need to tell R to remove/ignore tags based on total time detected : standardized time interval. 
 ###if this results in fewer than 100 points, tag must be removed as HMMs cannot be fit to tags w/
 ###less than 100 detections
 
 ###t.int = time interval to regularize telemetry data over (desired time step between detections
-###for use via HMMs)
+###for use via HMMs) UNITS ARE HOURS 
 t.int <- 1
 
 ##this loop determines the number of points in a predicted track with a pre-stipulated time interval
@@ -108,5 +59,31 @@ bad.tags <- nDetections[which(nDetections$Boolean==0),]
 good.tags <- nDetections[which(nDetections$Boolean==1),]
 
 ##Remove Tags w/ sub 100 detections from larger data set
+XX
 
+
+
+###DISREGARD BELOW. NOT FINISHED YET.
+test <- subset(crab.dat, ID=="31288")
+str(test)
+
+head(test)
+test$seq <- as.factor(seq(1:nrow(test)))
+
+time.difference <- NULL
+time.diff.sheet <- NULL
+
+##may need to tell R to start at Row 2(i.e. avoid using header and spitting out NAs)
+for (m in levels(test$seq))
+{
+  Row <- subset(test, seq==m)
+    
+  RowAdj <- subset(test, seq == (m+1))
+  
+  ##probably add an ifelse here telling it to stop at max number of rows in the data sheet (or for that particular tag)
+  
+  a <- difftime(RowAdj$time, Row$time, tz = "UTC", units="hours")
+  time.diff.sheet <- as.data.frame(a)
+  time.difference <- rbind(time.difference, time.diff.sheet)
+}
 
