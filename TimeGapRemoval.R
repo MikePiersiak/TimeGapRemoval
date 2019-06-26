@@ -10,9 +10,10 @@
 
 crab.dat <- read.csv("CrabData.csv")
 crab.test <- read.csv("CrabData.test.csv")
-str(crab.test)
+str(crab.dat)
 
 crab.dat$Time <- as.POSIXct(crab.dat$Time, format = "%m/%d/%Y %H:%M", tz="UTC")
+crab.dat$release.time <- as.POSIXct(crab.dat$release.time, format = "%m/%d/%Y %H:%M", tz="UTC")
 crab.test$Time <- as.POSIXct(crab.test$Time, format = "%m/%d/%Y %H:%M", tz="UTC")
 
 crab.dat$TRANSMITTER <- as.factor(crab.dat$TRANSMITTER)
@@ -75,10 +76,37 @@ tag.remove <- subset(crab.test, ! ID %in% c(#"31289",
 ###if this results in fewer than 100 points, tag must be removed as HMMs cannot be fit to tags w/
 ###less than 100 detections
 
-###need to write a for-loop telling R to remove tags not befitting of HMMs
+###t.int = time interval to regularize telemetry data over (desired time step between detections
+###for use via HMMs)
+t.int <- 1
 
-crwOut1 <- crawlWrap(obsData=a, timeStep="30 mins",theta=c(6.855, -0.007), fixPar=c(NA,NA))
-plot(crwOut1)                     
+##this loop determines the number of points in a predicted track with a pre-stipulated time interval
+##between detections (t.int)
+nDetections <- NULL
 
-View(crab.test[which(crab.test$ID=="31300"),])
-a <- subset(crab.test, ID=="31300")
+for (i in levels(crab.dat$ID)){
+  
+  Tag <- subset(crab.dat, ID==i)
+  tm.dur <- as.numeric(difftime((max(Tag$time)),(min(Tag$time)),units = "hours"))
+  nPoints <- tm.dur/t.int
+  sheet <- cbind(i,nPoints)
+  nDetections <- rbind(nDetections, sheet)
+
+}
+
+nDetections <- as.data.frame(nDetections)
+nDetections$nPoints <- as.integer(nDetections$nPoints)
+
+##add Column of 0's and 1's to distinguish good (100+ detections) and bad (<100 detections) tags
+nDetections$Boolean <- ifelse(nDetections$nPoints < 101,0,1)
+colnames(nDetections) <- c("ID","nPoints","Boolean")
+
+##Boolean operator--0's indicate bad tags
+##1's indicate good tags (100+ detections)
+
+bad.tags <- nDetections[which(nDetections$Boolean==0),]
+good.tags <- nDetections[which(nDetections$Boolean==1),]
+
+##Remove Tags w/ sub 100 detections from larger data set
+
+
