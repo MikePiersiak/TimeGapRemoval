@@ -9,39 +9,17 @@
 setwd("/Users/PiersiakM/Desktop/Snow Crab Behavior")
 
 crab.dat <- read.csv("CrabData.csv")
-crab.test <- read.csv("CrabData.test.csv")
 str(crab.dat)
-str(crab.test)
 
 crab.dat$Time <- as.POSIXct(crab.dat$Time, format = "%m/%d/%Y %H:%M", tz="UTC")
 crab.dat$release.time <- as.POSIXct(crab.dat$release.time, format = "%m/%d/%Y %H:%M", tz="UTC")
-crab.test$Time <- as.POSIXct(crab.test$Time, format = "%m/%d/%Y %H:%M", tz="UTC")
-
 crab.dat$TRANSMITTER <- as.factor(crab.dat$TRANSMITTER)
 
 ##change name of column 'TRANSMITTER' to 'ID' for later imputation in momentuHMM (as well as X/Y cols to 'x' and 'y' and col(Time) to 'time)
-names(crab.test)[names(crab.test) == "TRANSMITTER"] <- "ID"
-names(crab.test)[names(crab.test) == "X"] <- "x"
-names(crab.test)[names(crab.test) == "Y"] <- "y"
-names(crab.test)[names(crab.test) == "Time"] <- "time"
-
-str(crab.dat)
-crab.dat$ID <- as.factor(crab.dat$ID)
-
 names(crab.dat)[names(crab.dat) == "TRANSMITTER"] <- "ID"
 names(crab.dat)[names(crab.dat) == "X"] <- "x"
 names(crab.dat)[names(crab.dat) == "Y"] <- "y"
 names(crab.dat)[names(crab.dat) == "Time"] <- "time"
-
-
-
-
-
-require(momentuHMM)
-crwOut1 <- crawlWrap(obsData=crab.test, timeStep="hour",theta=c(6.855, -0.007), fixPar=c(NA,NA))
-plot(crwOut1)
-
-levels(crab.test$ID)                     
 
 ###crawlWrap fails if wrapper function creates track with <100 detection locations
 ###need to tell R to remove/ignore tags based on total time detected : standardized time interval. 
@@ -81,9 +59,7 @@ str(nDetections)
 bad.tags <- nDetections[which(nDetections$Boolean==0),]
 good.tags <- nDetections[which(nDetections$Boolean==1),]
 
-
 ##Remove Tags w/ sub 100 detections from larger data set
-
 a <- bad.tags$ID
 crab.dat.rm <- subset(crab.dat, ! ID %in% a)
 
@@ -124,11 +100,14 @@ for (i in levels(crab.dat.rm$ID))
 
 all.tags <- as.data.frame(all.tags)
 head(all.tags)
+
+##don't know why this is in minutes but needed to convert back to hours
 all.tags$TimeDuration <- (as.numeric(all.tags$TimeDuration)) / 60
 
 colnames(all.tags) <- c("ID","DetectionNumber","TimeDuration")
 
-
+##The loop below and subsequent two lines will identify and remove tags exceeding a temporal duration
+##stipulated in ln117
 new.tags <- NULL
 
 for (l in levels(all.tags$ID)) {
