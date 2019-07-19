@@ -100,14 +100,11 @@ for (i in levels(crab.dat.rm$ID))
 
 all.tags <- as.data.frame(all.tags)
 head(all.tags)
-
-##don't know why this is in minutes but needed to convert back to hours
 all.tags$TimeDuration <- (as.numeric(all.tags$TimeDuration)) / 60
 
 colnames(all.tags) <- c("ID","DetectionNumber","TimeDuration")
 
-##The loop below and subsequent two lines will identify and remove tags exceeding a temporal duration
-##stipulated in ln117
+
 new.tags <- NULL
 
 for (l in levels(all.tags$ID)) {
@@ -116,12 +113,69 @@ for (l in levels(all.tags$ID)) {
   
   ##this statement here stipulates the time interval that we want to split our movement tracks around
   ##i.e. how much time has to elapse before we split the track. Here I went with four hours.
-  Tag$boolean <- ifelse(Tag$TimeDuration > 4, "1", "0")
-  Tag$maxBoolean <- max(Tag$boolean)
+  Tag$boolean4 <- ifelse(Tag$TimeDuration > 4, "1", "0")
+  Tag$boolean8 <- ifelse(Tag$TimeDuration > 8, "1", "0")
+  Tag$boolean12 <- ifelse(Tag$TimeDuration > 12, "1", "0")
+  Tag$boolean16 <- ifelse(Tag$TimeDuration > 16, "1", "0")
+  
+  Tag$maxBoolean4 <- max(Tag$boolean4)
+  Tag$maxBoolean8 <- max(Tag$boolean8)
+  Tag$maxBoolean12 <- max(Tag$boolean12)
+  Tag$maxBoolean16 <- max(Tag$boolean16)
+  
   new.tags <- rbind(new.tags, Tag)
   
 }
 
-test <- subset(new.tags, maxBoolean=="0")
-test$ID <- droplevels(test$ID)
-str(test)
+four <- subset(new.tags, maxBoolean4=="0")
+eight <- subset(new.tags, maxBoolean8=="0")
+twelve <- subset(new.tags, maxBoolean12=="0")
+sixteen <- subset(new.tags, maxBoolean16=="0")
+
+four$ID <- droplevels(four$ID)
+eight$ID <- droplevels(eight$ID)
+twelve$ID <- droplevels(twelve$ID)
+sixteen$ID <- droplevels(sixteen$ID)
+print(levels(sixteen$ID))
+
+str(four)
+str(eight)
+str(twelve)
+str(sixteen)
+
+a <- levels(four$ID)
+
+four.dat <- subset(crab.dat, ID %in% c("31395", "53259", "57079")) 
+four.dat$ID <- droplevels(four.dat$ID)
+str(four.dat)
+
+eight.dat <- subset(crab.dat, ID %in% c("31306", "31395", "53214", "53259", "57074", "57079"))
+eight.dat$ID <- droplevels(eight.dat$ID)
+str(eight.dat)
+
+twelve.dat <- subset(crab.dat, ID %in% c("31304", "31306", "31312", "31395", "31398", "53170", 
+                                         "53176", "53182", "53214", "53259", "53271", "57064", 
+                                         "57074", "57078", "57079"))
+twelve.dat$ID <- droplevels(twelve.dat$ID)
+str(twelve.dat)
+
+
+sixteen.dat <- subset(crab.dat, ID %in% c("31289", "31300", "31304", "31305", "31306", "31307", "31308", "31312", "31314", "31318",
+                                          "31321", "31322", "31323", "31375", "31395", "31398", "31400", "53139", "53147", "53168",
+                                          "53170", "53176", "53177", "53180", "53182", "53185", "53196", "53200", "53208", "53214",
+                                          "53228", "53259", "53270", "53271", "53278", "53280", "57064", "57067", "57074", "57078",
+                                          "57079", "57081", "57089", "57100", "57106"))
+sixteen.dat$ID <- droplevels(sixteen.dat$ID)
+str(sixteen.dat)
+
+
+require(momentuHMM)
+
+{
+  
+  crwOut.four <- crawlWrap(obsData = four.dat, timeStep = "hour", theta=c(6.855, -0.007), fixPar=c(NA,NA))
+  crwOut.eight <- crawlWrap(obsData = eight.dat, timeStep = "hour", theta=c(6.855, -0.007), fixPar=c(NA,NA))
+  crwOut.twelve <- crawlWrap(obsData = twelve.dat, timeStep = "hour", theta=c(6.855, -0.007), fixPar=c(NA,NA))
+  crwOut.sixteen <- crawlWrap(obsData = sixteen.dat, timeStep = "hour", theta=c(6.855, -0.007), fixPar=c(NA,NA))
+
+}
