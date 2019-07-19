@@ -179,3 +179,15 @@ require(momentuHMM)
   crwOut.sixteen <- crawlWrap(obsData = sixteen.dat, timeStep = "hour", theta=c(6.855, -0.007), fixPar=c(NA,NA))
 
 }
+
+{
+prep.four <- prepData(data = crwOut.four)
+prep.eight <- prepData(data = crwOut.eight)
+prep.twelve <- prepData(data = crwOut.twelve)
+prep.sixteen <- prepData(data = crwOut.sixteen)
+}
+
+write.csv(prep.four, "FourHrTags.csv")
+write.csv(prep.eight, "EightHrTags.csv")
+write.csv(prep.twelve, "TwelveHrTags.csv")
+write.csv(prep.sixteen, "SixteenHrTags.csv")
